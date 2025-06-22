@@ -79,14 +79,12 @@ class HeadlineSelector:
 
 class StockMentionMapper:
     def __init__(self):
-        # Load Hugging Face NER pipeline
         self.ner = pipeline(
             "ner",
             model="dslim/bert-base-NER",
             aggregation_strategy="simple"
         )
 
-        # Predefined fallback company-to-ticker map
         self.company_to_ticker = {
             "Reliance": "RELIANCE.NS",
             "TCS": "TCS.NS",
@@ -101,9 +99,6 @@ class StockMentionMapper:
         }
 
     def _search_ticker_online(self, name: str):
-        """
-        Attempts to find a ticker symbol using Yahoo Finance search API.
-        """
         try:
             url = f"https://query1.finance.yahoo.com/v1/finance/search?q={name}"
             headers = {"User-Agent": "Mozilla/5.0"}
@@ -117,18 +112,17 @@ class StockMentionMapper:
             for result in data.get("quotes", []):
                 if result.get("exchange") in ["NSI", "BSE"]:
                     return result["symbol"]
+
         except Exception as e:
             print(f"[⚠️] Error fetching ticker for '{name}': {e}")
         return None
 
-    def extract_mentions(self, news_list: list, top_n: int = 7) -> list:
-        """
-        Extracts company mentions from a list of news headlines and maps them to tickers.
-        Returns top_n companies sorted by frequency.
-        """
+    def extract_mentions(self, news_list: list) -> list:
         all_orgs = []
 
         for text in news_list:
+            if not text:
+                continue
             entities = self.ner(text)
             orgs = [e['word'] for e in entities if e['entity_group'] == 'ORG']
             all_orgs.extend(orgs)
@@ -137,18 +131,22 @@ class StockMentionMapper:
         mention_map = {}
 
         for org, count in org_counts.items():
+            if org in mention_map:
+                continue
+
             ticker = self.company_to_ticker.get(org)
             if ticker is None:
                 ticker = self._search_ticker_online(org)
                 if ticker:
-                    self.company_to_ticker[org] = ticker  # Cache the result
+                    self.company_to_ticker[org] = ticker
+
             if ticker:
                 mention_map[org] = {"ticker": ticker, "count": count}
 
-        # Sort and return top N mentions
-        top_mentioned = sorted(mention_map.items(), key=lambda x: x[1]["count"], reverse=True)[:top_n]
-        return top_mentioned[1:]
+        # Sort all found stocks by frequency
+        sorted_mentions = sorted(mention_map.items(), key=lambda x: x[1]["count"], reverse=True)
 
+        return sorted_mentions
 
 class NewsCategorizer:
     def __init__(self, model_name="MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli"):

@@ -37,3 +37,5 @@ def add_subscriber(email):
     except Exception as e:
         print("Database error:", e)
         return False
+
+
