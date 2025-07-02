@@ -22,7 +22,8 @@ class DailyNewsEmailService:
 
     def fetch_subscribers(self):
         try:
-            conn = psycopg2.connect(DB_HOST)
+            conn = psycopg2.connect(dsn="postgresql://marketmirror_db_user:qBYOND8sVdbH6dobJXp6fIICGtWk6OOV@dpg-d1ap9tp5pdvs73d53geg-a.oregon-postgres.render.com/marketmirror_db")
+            print(f"[DEBUG] Connecting to: {DB_HOST}")
             cur = conn.cursor()
             cur.execute("SELECT email FROM subscribers")
             emails = [row[0] for row in cur.fetchall()]
