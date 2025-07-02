@@ -78,8 +78,7 @@ class DailyNewsEmailService:
         return html
 
     def send_all(self):
-        # recipients = self.fetch_subscribers()
-        recipients = ["vihansrathore2006@gmail.com"]
+        recipients = self.fetch_subscribers()
         if not recipients:
             print("❌ No subscribers to send.")
             return

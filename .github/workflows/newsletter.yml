@@ -1,45 +1,8 @@
-#name: Daily Newsletter
-#
-#on:
-#  schedule:
-#    - cron: '30 12 * * *'
-#  workflow_dispatch:
-#
-#jobs:
-#  send-newsletter:
-#    runs-on: ubuntu-latest
-#
-#    steps:
-#    - name: Confirm Execution
-#      run: echo "✅ Workflow has started at $(date)"
-#
-#    - name: Checkout Repository
-#      uses: actions/checkout@v3
-#
-#    - name: Python Set up
-#      uses: actions/setup-python@v4
-#      with:
-#        python-version: '3.10'
-#
-#    - name: Install Dependencies
-#      run: |
-#        python -m pip install --upgrade pip
-#        pip install -r requirements.txt
-#
-#    - name: Run Newsletter
-#      env:
-#        SENDER_MAIL: ${{ secrets.SENDER_MAIL }}
-#        SMTP_KEY: ${{ secrets.SMTP_KEY }}
-#        DB_HOST: ${{ secrets.DB_HOST }}
-#      run: |
-#        python subscription.py
-#
-
-name: Test Newsletter Every 15 Minutes
+name: Daily Newsletter
 
 on:
   schedule:
-    - cron: '*/15 * * * *'  # Runs every 15 minutes (UTC)
+    - cron: '30 23 * * *'   # 5:00 AM IST
   workflow_dispatch:
 
 jobs:
@@ -47,26 +10,23 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v3
+      - name: Checkout Repository
+        uses: actions/checkout@v3
 
-    - name: Python Set up
-      uses: actions/setup-python@v4
-      with:
-        python-version: '3.10'
+      - name: Python Set up
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
 
-    - name: Install Dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -r requirements.txt
+      - name: Install Dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
 
-    - name: Confirm Execution
-      run: echo "✅ Workflow has started at $(date)"
-
-    - name: Run Newsletter
-      env:
-        SENDER_MAIL: ${{ secrets.SENDER_MAIL }}
-        SMTP_KEY: ${{ secrets.SMTP_KEY }}
-        DB_HOST: ${{ secrets.DB_HOST }}
-      run: |
-        python subscription.py
+      - name: Run Newsletter
+        env:
+          SENDER_MAIL: ${{ secrets.SENDER_MAIL }}
+          SMTP_KEY: ${{ secrets.SMTP_KEY }}
+          DB_HOST: ${{ secrets.DB_HOST }}
+        run: |
+          python subscription.py

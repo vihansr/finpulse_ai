@@ -25,7 +25,7 @@ with col2:
             if email_input and "@" in email_input:
                 success = add_subscriber(email_input)
                 if success:
-                    st.success(f"✅ Subscribed! Welcome email sent to {email_input}")
+                    st.success(f"{email_input} is Subscribed! Welcome to FinPulse AI ")
                     sender = WelcomeEmailSender()
                     sender.send_welcome_email(email_input)
                 else:
