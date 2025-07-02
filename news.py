@@ -2,7 +2,6 @@ from bs4 import BeautifulSoup as BS
 import requests
 from selenium import webdriver
 from selenium.webdriver.common.by import By
-import time
 
 class NewsScraper:
     def __init__(self):
@@ -83,19 +82,3 @@ class NewsScraper:
         self.fetch_cnbc()
         self.driver.quit()
         return self.overall_news
-
-
-def index_data():
-    nse_url = "https://www.nseindia.com/"
-    driver = webdriver.Chrome()
-    try:
-        driver.get(nse_url)
-        time.sleep(5)
-        nifty_price = driver.find_element(By.XPATH, "/html/body/div[1]/div[2]/div/div/div[1]/div/div/div[3]/div/h3")
-        advanced = driver.find_element(By.XPATH,
-                                           "/html/body/div[1]/div[3]/div/div/div[1]/div/div[2]/div/div[2]/div/h3/a")
-        declined = driver.find_element(By.XPATH,
-                                           "/html/body/div[1]/div[3]/div/div/div[1]/div/div[2]/div/div[3]/div/h3/a")
-        return nifty_price.text, advanced.text, declined.text
-    except Exception as e:
-        print("NSE", e)

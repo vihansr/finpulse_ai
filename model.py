@@ -76,7 +76,6 @@ class HeadlineSelector:
 
         return top_headlines
 
-
 class StockMentionMapper:
     def __init__(self):
         self.ner = pipeline(
@@ -98,7 +97,24 @@ class StockMentionMapper:
             "PTC India": "PTC.NS"
         }
 
+        self.banned_symbols = {
+            "^BSESN", "^NSEBANK", "^NSEI", "^NSEMDCP50", "^CNXIT", "FMCGIETF.BO", "0P0000XVLA.BO"
+        }
+
+        self.banned_keywords = {
+            "Bank", "Sensex", "Index", "FMCG", "ETF", "Mutual Fund", "Government",
+            "Sector", "Market", "PSU", "RBI", "Nifty", "India", "Company"
+        }
+
+        self.banned_keywords = {"index", "etf", "fund", "benchmark", "sensex", "nifty", "nasdaq", "dow", "s&p", "bse"}
+
+    def _is_probable_index(self, name: str) -> bool:
+        return any(kw.lower() in name.lower() for kw in self.banned_keywords)
+
     def _search_ticker_online(self, name: str):
+        if self._is_probable_index(name):
+            return None
+
         try:
             url = f"https://query1.finance.yahoo.com/v1/finance/search?q={name}"
             headers = {"User-Agent": "Mozilla/5.0"}
@@ -110,7 +126,7 @@ class StockMentionMapper:
 
             data = response.json()
             for result in data.get("quotes", []):
-                if result.get("exchange") in ["NSI", "BSE"]:
+                if result.get("exchange") in ["NSI", "BSE"] and not self._is_probable_index(result.get("shortname", "")):
                     return result["symbol"]
 
         except Exception as e:
@@ -131,28 +147,42 @@ class StockMentionMapper:
         mention_map = {}
 
         for org, count in org_counts.items():
-            if org in mention_map:
+            cleaned_org = org.lstrip("#").strip()
+
+            if not cleaned_org or len(cleaned_org) < 3:
                 continue
 
-            ticker = self.company_to_ticker.get(org)
+            if cleaned_org.lower() in self.banned_keywords:
+                continue
+
+            if cleaned_org in mention_map:
+                continue
+
+            if cleaned_org in self.banned_symbols:
+                continue
+
+            if cleaned_org.lower() in (word.lower() for word in self.banned_keywords):
+                continue
+
+            ticker = self.company_to_ticker.get(cleaned_org)
             if ticker is None:
-                ticker = self._search_ticker_online(org)
+                ticker = self._search_ticker_online(cleaned_org)
                 if ticker:
-                    self.company_to_ticker[org] = ticker
+                    self.company_to_ticker[cleaned_org] = ticker
 
             if ticker:
-                mention_map[org] = {"ticker": ticker, "count": count}
+                mention_map[cleaned_org] = {"ticker": ticker, "count": count}
 
-        # Sort all found stocks by frequency
         sorted_mentions = sorted(mention_map.items(), key=lambda x: x[1]["count"], reverse=True)
-
         return sorted_mentions
+
 
 class NewsCategorizer:
     def __init__(self, model_name="MoritzLaurer/DeBERTa-v3-base-mnli-fever-anli"):
         from transformers import pipeline
         self.categories = ["Market & Stocks", "Economy & Policy", "Global & Industry"]
         self.pipe = pipeline("zero-shot-classification", model=model_name)
+
 
     def categorize(self, news_list):
         categorized = {category: [] for category in self.categories}
