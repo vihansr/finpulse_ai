@@ -35,6 +35,12 @@ class DailyNewsEmailService:
     def generate_html(self):
         date_str = datetime.now().strftime("%A, %d %B %Y")
 
+        stock_section = (
+            ''.join(f"<div class='stock'>💹 <b>{name}</b> ({info['ticker']})</div>"
+                    for name, info in self.stock_mentions[:7])
+            if self.stock_mentions else "<p>No major stocks mentioned today.</p>"
+        )
+
         html = f"""
         <html>
         <head>
@@ -49,14 +55,10 @@ class DailyNewsEmailService:
         <body>
             <div class="container">
                 <h1>📬 Your Daily Financial Digest – {date_str}</h1>
-                
                 <h2>📌 Securities to Watch Today</h2>
-                {''.join(f"<div class='stock'>💹 <b>{name}</b> ({info['ticker']})</div>"
-                         for name, info in self.stock_mentions[:7])}
+                {stock_section}
                 <h2>🔥 Top 10 Headlines</h2>
-                <ol>
-                    {''.join(f"<li>{item}</li>" for item in self.top_headlines)}
-                </ol>
+                <ol>{''.join(f"<li>{item}</li>" for item in self.top_headlines)}</ol>
 
                 <h2>📈 Market & Stocks</h2>
                 <ul>{''.join(f"<li>{item}</li>" for item in self.categorized_news.get('Market & Stocks', [])[:5])}</ul>
@@ -75,8 +77,7 @@ class DailyNewsEmailService:
         return html
 
     def send_all(self):
-        # recipients = self.fetch_subscribers()
-        recipients = ["vihansrathore2006@gmail.com"]
+        recipients = self.fetch_subscribers()
         if not recipients:
             print("❌ No subscribers to send.")
             return
@@ -103,6 +104,7 @@ class DailyNewsEmailService:
                 print(f"❌ Failed for {email}: {e}")
 
         print(f"📤 Email sent to {sent_count} subscribers.")
+
 
 
 scraper = NewsScraper()
