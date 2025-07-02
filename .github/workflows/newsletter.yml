@@ -34,7 +34,7 @@
 name: Daily Newsletter
 
 on:
-  workflow_dispatch:  # Add this to allow manual triggering
+  workflow_dispatch:
 
 jobs:
   send:
@@ -52,6 +52,11 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Run Newsletter Script
-        run: python subscription.py
+      - name: Run Newsletter
+        env:
+          EMAIL_USER: ${{ secrets.EMAIL_USER }}
+          EMAIL_PASS: ${{ secrets.EMAIL_PASS }}
+          DB_URL: ${{ secrets.DB_URL }}
+        run: |
+          python subscription.py
 
