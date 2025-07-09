@@ -1,7 +1,7 @@
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
-from datetime import datetime
+from datetime import datetime, timedelta
 from model import NewsCategorizer, HeadlineSelector, StockMentionMapper
 from news import NewsScraper
 import psycopg2
@@ -34,7 +34,7 @@ class DailyNewsEmailService:
             return []
 
     def generate_html(self):
-        date_str = datetime.now().strftime("%A, %d %B %Y")
+        date_str = (datetime.now() + timedelta(days=1)).strftime("%A, %d %B %Y")
 
         stock_section = (
             ''.join(f"<div class='stock'>💹 <b>{name}</b> ({info['ticker']})</div>"
